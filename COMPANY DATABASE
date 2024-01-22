@@ -1,0 +1,111 @@
+create database company_131;
+use company_131;
+
+create table department(dno int primary key,dname varchar(25),mgrssn int,mgrstartdate date);
+
+create table employee(ssn int primary key,
+name varchar(25),
+address varchar(25),
+sex varchar(1),
+salary int,
+superssn int ,
+dno int,
+foreign key(superssn) references employee(ssn),
+foreign key(dno) references department(dno));
+
+alter table department add constraint fk_mgrssn
+foreign key(mgrssn) references employee(ssn);
+
+create table dlocation(dno int,dloc varchar(25),foreign key(dno) references department(dno),primary key(dno,dloc));
+
+create table project(pno int primary key,pname varchar(25),plocation varchar(25),dno int,foreign key(dno) references department(dno));
+
+create table workson(ssn int,pno int,hours int,foreign key(ssn) references employee(ssn),foreign key(pno) references project(pno), primary key(ssn,pno));
+
+show tables;
+
+insert into employee(ssn,name,address,sex,salary) values (1001,'jacob scott','jayanagar','m',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1002,'tim','jayanagar','m',7007011);
+insert into employee(ssn,name,address,sex,salary) values (1003,'jil','jayanagar','f',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1004,'josh','jayanagar','m',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1005,'jim','jayanagar','m',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1006,'kate','jayanagar','f',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1007,'joseph','jayanagar','m',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1008,'jay','jayanagar','m',6370010);
+insert into employee(ssn,name,address,sex,salary) values (1009,'claire','jayanagar','f',6370010);
+
+insert into department(dno,dname,mgrssn,mgrstartdate) values (1,'accounts',1001,'2017-02-12');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (2,'finance',1003,'2017-02-10');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (3,'hr',1003,'2017-03-23');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (4,'admin',1003,'2015-05-12');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (5,'payroll',1002,'2012-02-12');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (6,'housekeeping',1002,'2013-02-12');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (7,'training',1002,'2014-02-12');
+insert into department(dno,dname,mgrssn,mgrstartdate) values (8,'pf',1002,'2010-02-12');
+
+insert into dlocation values(1,'bangalore'),(1,'mumbai'),(1,'pune'),(2,'mumbai'),(3,'chennai'),(4,'mumbai'),
+(5,'guwahati'),(6,'mumbai'),(7,'dehli'),(8,'mumbai'),(8,'pune');
+
+insert into project values(10,'iot','mumbai',1),(11,'adhoc','pune',1),(12,'mobile','bangalore',2),(13,'finacle','chennai',3),
+(14,'android','pune',4),(15,'java','mumbai',5),(16,'dot net','pune',5),(17,'c#','mumbai',6),(18,'c++','delhi',7),(19,'python','delhi',8);
+
+insert into workson values(1001,11,40),(1001,15,45),(1001,16,40),(1002,10,45),(1002,11,45),(1003,11,45),
+(1004,19,45),(1005,18,45);
+
+update employee set dno =1 where ssn=1001;
+update employee set superssn=1001 , dno =7 where ssn=1002;
+update employee set superssn=1001 , dno =5 where ssn=1003;
+update employee set superssn=1002 , dno =5 where ssn=1004;
+update employee set superssn=1001 , dno =5 where ssn=1005;
+update employee set superssn=1001 , dno =2 where ssn=1006;
+update employee set superssn=1001 , dno =5 where ssn=1007;
+update employee set superssn=1003 , dno =5 where ssn=1008;
+update employee set superssn=1006 , dno =5 where ssn=1009;
+
+
+select *from employee;
+select* from department;
+select *from dlocation;
+select *from project;
+select *from workson;
+
+
+(SELECT pno
+FROM project P, department D, employee E 
+WHERE P.dno=D.dno AND E.ssn=D.mgrssn AND E.name='scott') 
+UNION 
+(SELECT pno
+FROM employee E, workson W 
+WHERE E.ssn=W.ssn AND E.name LIKE '%scott');
+
+
+SELECT E.ssn, salary*1.1 
+FROM employee E, workson W, project P 
+WHERE E.ssn=W.ssn AND W.pno=P.pno AND pname= 'iot';
+
+
+SELECT dname, max(salary), min(salary), avg(salary), 
+SUM(salary)
+FROM employee E, department D
+WHERE E.dno=D.dno
+GROUP BY D.dname
+HAVING D.dname='accounts';
+
+
+SELECT E.name
+FROM employee E 
+WHERE NOT EXISTS (SELECT pno 
+FROM project 
+WHERE dno=5 AND pno NOT IN (SELECT pno 
+FROM workson W 
+WHERE W.ssn=E.ssn)); 
+
+
+SELECT dno, COUNT(ssn) 
+FROM employee 
+WHERE salary>600000 AND dno IN (SELECT dno
+FROM 
+employee 
+GROUP BY dno
+HAVING COUNT(ssn)>5)
+GROUP BY dno;
